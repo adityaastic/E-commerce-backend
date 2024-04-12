@@ -72,4 +72,57 @@ const getAllUsers = async () => {
     }
 };
 
-module.exports = { createUser, findUserById, getUserByEmail, getUserProfileByToken, getAllUsers };
+async function findUserCart(userId) {
+    try {
+        let cart = await Cart.findOne({ user: userId }).populate('cartItems'); // Assuming 'user' field in Cart model represents userId
+        
+        let totalPrice = 0;
+        let totalItem = 0;
+
+        for (let cartItem of cart.cartItems) {
+            totalPrice += cartItem.price;
+            totalItem += cartItem.quantity;
+        }
+
+        cart.totalPrice = totalPrice;
+        cart.totalItem = totalItem;
+        cart.discount = totalPrice - cart.discountedPrice; // Assuming 'discountedPrice' field exists in Cart model
+
+        return cart;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
+async function addCartItem(userId, req) {
+    try {
+        const cart = await Cart.findOne({ user: userId });
+        const product = await Product.findById(req.productId);
+
+        const isPresent = await CartItem.findOne({ cart: cart._id, product: product._id, userId });
+
+        if (!isPresent) {
+            const cartItem = new CartItem({
+                product: product._id,
+                cart: cart._id,
+                quantity: 1,
+                userId,
+                price: product.price,
+                size: req.size,
+                discountedPrice: product.discountedPrice
+            });
+
+            const createdCartItem = await cartItem.save();
+            cart.cartItems.push(createdCartItem);
+            await cart.save();
+            return "Item added to cart";
+        } else {
+            return "Item already present in cart";
+        }
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
+
+module.exports = { createUser, findUserById, getUserByEmail, getUserProfileByToken, getAllUsers,findUserCart, addCartItem  };
