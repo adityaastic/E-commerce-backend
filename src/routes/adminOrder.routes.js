@@ -1,14 +1,13 @@
-const express = require("express");
-const router = express.Router();
+const express=require("express");
+const authenticate = require("../middleware/authenticate.js");
+const router=express.Router();
+const adminOrderController=require("../controller/adminOrder.controller.js")
 
-const orderController = require("../controller/adminOrder.controller");
-const authenticate = require("../middleware/authenticate");
+router.get("/",authenticate,adminOrderController.getAllOrders);
+router.put("/:orderId/confirmed",authenticate,adminOrderController.confirmedOrder);
+router.put("/:orderId/ship",authenticate,adminOrderController.shipOrder);
+router.put("/:orderId/deliver",authenticate,adminOrderController.deliverOrder);
+router.put("/:orderId/cancel",authenticate,adminOrderController. cancelOrder);
+router.delete("/:orderId/delete",authenticate,adminOrderController.deleteOrder);
 
-router.get("/", authenticate, orderController.getAllOrders);
-router.put('/:orderId/confirmed', authenticate, orderController.confirmedOrders);
-router.put('/:orderId/ship', authenticate, orderController.shipOrders);
-router.put('/:orderId/deliver', authenticate, orderController.deliverOrders);
-router.put('/:orderId/cancel', authenticate, orderController.cancelledOrders);
-router.put('/:orderId/delete', authenticate, orderController.deleteOrders);
-
-module.exports = router;
+module.exports=router;
